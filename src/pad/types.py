@@ -30,6 +30,15 @@ class ComputeDriver(Protocol):
     def release(self, worker_id: str, dirty: bool = False) -> None: ...
 
 
+class RunStore(Protocol):
+    def start(self, run_id: str, job: str, dry_run: bool) -> None: ...
+
+    def record_step(self, run_id: str, name: str, status: Status, message: str) -> None: ...
+
+    def finish(self, run_id: str, status: Status) -> None: ...
+
+    def list_runs(self) -> list[dict]: ...
+
 @dataclass
 class RunContext:
     run_id: str
@@ -38,6 +47,7 @@ class RunContext:
     vars: dict[str, Any] = field(default_factory=dict)
     outputs: dict[str, Any] = field(default_factory=dict)
     compute: ComputeDriver | None = None
+    store: RunStore | None = None
     log: Logger | None = None
 
     def get(self, key: str, default: Any = None) -> Any:

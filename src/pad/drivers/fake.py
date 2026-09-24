@@ -35,3 +35,7 @@ class FakeCompute:
     def release(self, worker_id: str, dirty: bool = False) -> None:
         self.claimed[worker_id] = False
         self.released.append((worker_id, dirty))
+
+@dataclass
+class FakeStore:
+    """In-memory storage for testing and development"""
