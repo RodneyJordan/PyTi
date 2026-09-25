@@ -39,3 +39,34 @@ class FakeCompute:
 @dataclass
 class FakeStore:
     """In-memory storage for testing and development"""
+
+    id: str = ""
+    job_name: str = ""
+    started: bool = False
+    finished: bool = False
+    steps: dict[tuple[str, dict[Status, str]]] = field(default_factory=dict)
+    status: str = ""
+
+    def start(self, run_id: str, job: str, dry_run: bool) -> None:
+        # I don't really care about that dry_run bool at this time
+        self.id = run_id
+        self.job_name = job
+        self.start = True
+        return
+
+    def record_step(self, run_id: str, name: str, status: Status, message: str) -> None:
+        self.status = status.value
+        self.step[name].append(status, message)
+        return
+
+    def finish(self, run_id: str, status: Status) -> None:
+        self.finished = True
+
+    def list_runs(self) -> list[dict]:
+        runs: list[dict] = []
+        for step in self.steps:
+            runs.append(self.steps[step])
+
+        return runs
+
+        
