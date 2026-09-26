@@ -1,4 +1,4 @@
-from pad.drivers.fake import FakeCompute
+from pad.drivers.fake import FakeCompute, FakeStore
 from pad.engine import execute
 from pad.jobs import get_job
 from pad.types import RunContext, Status
@@ -6,12 +6,14 @@ from pad.types import RunContext, Status
 
 def _ctx(**kwargs) -> RunContext:
     compute = kwargs.pop("compute", FakeCompute())
+    store = kwargs.pop("store", FakeStore())
     dry_run = kwargs.pop("dry_run", False)
     return RunContext(
         run_id="t1",
         job="demo",
         dry_run=dry_run,
         compute=compute,
+        store=store,
         **kwargs,
     )
 
@@ -50,3 +52,12 @@ def test_dry_run_does_not_touch_compute():
     assert compute.claimed == {}
     assert compute.ran == []
     assert compute.released == []
+
+def test_store_fail_row():
+    store = FakeStore()
+    ctx = _ctx(store=store, dry_run=False)
+    store.start(ctx.get("run_id"), "demo", False)
+    store.record_step(ctx.get("run_id"), "claim_worker", Status.FAILED, "claim failure")
+    store.finish(ctx.get("run_id"), Status.FAILED)
+    runs = store.list_runs()
+    assert store._run(ctx.get("run_id"))["status"] == "failed"
