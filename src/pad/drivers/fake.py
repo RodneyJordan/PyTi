@@ -44,29 +44,42 @@ class FakeStore:
     job_name: str = ""
     started: bool = False
     finished: bool = False
-    steps: dict[tuple[str, dict[Status, str]]] = field(default_factory=dict)
+    runs: list[dict[str, Any]] = field(default_factory=list)
     status: str = ""
 
     def start(self, run_id: str, job: str, dry_run: bool) -> None:
         # I don't really care about that dry_run bool at this time
-        self.id = run_id
-        self.job_name = job
-        self.start = True
+        self.runs.append({
+            "run_id": run_id,
+            "job": job,
+            "finished": False,
+            "dry_run": False,
+            "status": "",
+            "steps": [],
+        })
         return
 
     def record_step(self, run_id: str, name: str, status: Status, message: str) -> None:
-        self.status = status.value
-        self.step[name].append(status, message)
+        row = self._run(run_id)
+        row["steps"].append({
+            "name": name,
+            "status": status.value,
+            "message": message
+        })
         return
 
     def finish(self, run_id: str, status: Status) -> None:
-        self.finished = True
+        row = self._run(run_id)
+        row["status"] = status.value
+        row["finished"] = True
 
     def list_runs(self) -> list[dict]:
-        runs: list[dict] = []
-        for step in self.steps:
-            runs.append(self.steps[step])
+        return list(self.runs)
 
-        return runs
+    def _run(self, run_id: str) -> dict:
+        for row in self.runs:
+            if row["run_id"] == run_id:
+                return row
+        raise KeyError(run_id)
 
         
