@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 import uuid
 
-from pad.drivers.fake import FakeCompute
+from pad.drivers.fake import FakeCompute, FakeStore
 from pad.engine import execute
 from pad.jobs import get_job
 from pad.types import RunContext, Status, StepResult
@@ -28,6 +28,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.cmd == "run":
         compute = FakeCompute(fail_run=args.fail_run, fail_name=args.fail_name)
+        store = FakeStore()
         ctx = RunContext(
             run_id=str(uuid.uuid4())[:8],
             job=args.job,

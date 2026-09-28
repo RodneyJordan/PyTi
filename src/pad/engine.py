@@ -14,7 +14,11 @@ def execute(steps: list[Step], ctx: RunContext) -> Status:
         except Exception as exc:  # last resort; steps should return FAILED
             result = _failed(f"unhandled error: {exc}")
             _log(ctx, step.name, result)
+            if ctx.store is not None:
+                ctx.store.record_step(ctx.run_id. step.name, result.status, result.message)
             _compensate(done, ctx)
+            if ctx.store is not None:
+                ctx.store.finish(ctx.run_id, Status.FAILED)
             return Status.FAILED
 
         _log(ctx, step.name, result)
