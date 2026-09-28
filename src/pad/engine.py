@@ -6,9 +6,11 @@ from pad.types import RunContext, Status
 
 def execute(steps: list[Step], ctx: RunContext) -> Status:
     done: list[Step] = []
+    ctx.store.start(ctx.run_id, ctx.job, ctx.dry_run)
     for step in steps:
         try:
             result = step.plan(ctx) if ctx.dry_run else step.apply(ctx)
+            ctx.store.record_step(ctx.run_id, step.name, result.status, result.message)
         except Exception as exc:  # last resort; steps should return FAILED
             result = _failed(f"unhandled error: {exc}")
             _log(ctx, step.name, result)
@@ -19,12 +21,13 @@ def execute(steps: list[Step], ctx: RunContext) -> Status:
 
         if result.status is Status.FAILED:
             _compensate(done, ctx)
+            ctx.store.finish(ctx.run_id, Status.FAILED)
             return Status.FAILED
 
         ctx.outputs.update(result.outputs)
         if result.status is Status.OK:
             done.append(step)
-
+    ctx.store.finish(ctx.run_id, Status.OK)
     return Status.OK
 
 

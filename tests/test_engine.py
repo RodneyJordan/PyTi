@@ -56,8 +56,13 @@ def test_dry_run_does_not_touch_compute():
 def test_store_fail_row():
     store = FakeStore()
     ctx = _ctx(store=store, dry_run=False)
-    store.start(ctx.get("run_id"), "demo", False)
-    store.record_step(ctx.get("run_id"), "claim_worker", Status.FAILED, "claim failure")
-    store.finish(ctx.get("run_id"), Status.FAILED)
-    runs = store.list_runs()
-    assert store._run(ctx.get("run_id"))["status"] == "failed"
+    store.start(ctx.run_id, "demo", False)
+    store.record_step(ctx.run_id, "claim_worker", Status.FAILED, "claim failure")
+    store.finish(ctx.run_id, Status.FAILED)
+    run = store.list_runs()[0]
+    assert run["run_id"] == ctx.run_id
+    assert run["job"] == "demo"
+    assert run["status"] == "failed"
+    assert run["finished"] is True
+    assert run["steps"][0]["name"] == "claim_worker"
+    assert run["steps"][0]["status"] == "failed"

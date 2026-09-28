@@ -33,6 +33,7 @@ def main(argv: list[str] | None = None) -> int:
             job=args.job,
             dry_run=args.dry_run,
             compute=compute,
+            store=store,
             log=PrintLogger(),
         )
         status = execute(get_job(args.job), ctx)
