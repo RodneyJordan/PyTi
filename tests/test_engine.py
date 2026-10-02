@@ -80,7 +80,9 @@ def test_sqlite_start(tmp_path):
 def test_sqlite_record_step(tmp_path):
     path = tmp_path / "pad.sqlite"
     store = SqliteStore(str(path))
+    store.start("r1", "demo", False)
     store.record_step("r1", "jenkins", Status.OK, "testing")
+    store.finish("r1", Status.OK)
     row = store.conn.execute(
         "SELECT run_id, name, status, message, seq FROM steps"
     ).fetchone()
@@ -97,3 +99,12 @@ def test_sqlite_finish(tmp_path):
         ("r1",),
     ).fetchone()
     assert row == ("r1", "demo", 0, "ok", 1)
+
+def test_sqllite_list_runs(tmp_path):
+    path = tmp_path / "pad.sqlite"
+    store = SqliteStore(str(path))
+    store.start("r1", "demo", False)
+    store.record_step("r1", "jenkins", Status.OK, "testing")
+    store.finish("r1", Status.OK)
+    runs = store.list_runs()
+    assert isinstance(runs[0], dict)

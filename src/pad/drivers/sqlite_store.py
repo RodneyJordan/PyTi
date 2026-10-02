@@ -23,7 +23,8 @@ class SqliteStore:
                 name TEXT NOT NULL,
                 status TEXT NOT NULL,
                 message TEXT NOT NULL,
-                seq INTEGER NOT NULL
+                seq INTEGER NOT NULL,
+                FOREIGN KEY (run_id) REFERENCES runs(run_id)
             );
         """)
 
@@ -61,3 +62,27 @@ class SqliteStore:
             (status.value, run_id),
         )
         self.conn.commit()
+
+    def list_runs(self) -> list[dict]:
+        runs = list()
+        rows = self.conn.execute(
+            "SELECT run_id, job, dry_run, status, finished FROM runs",
+        )
+        for row in rows:
+            run = {
+                "run_id": row[0], 
+                "job": row[1], 
+                "dry_run": bool(row[2]), 
+                "status": row[3], 
+                "finished": bool(row[4]),
+                "steps": []
+                }
+            steps = self.conn.execute(
+                "SELECT name, status, message FROM steps WHERE run_id = ? ORDER BY seq", [row[0]]
+            ) 
+            
+            for step in steps:
+                run["steps"].append(step)
+
+            runs.append(run)
+        return runs
