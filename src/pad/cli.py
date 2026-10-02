@@ -28,7 +28,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.cmd == "run":
         compute = FakeCompute(fail_run=args.fail_run, fail_name=args.fail_name)
-        store = FakeStore()
+        store = SqliteStore()
         ctx = RunContext(
             run_id=str(uuid.uuid4())[:8],
             job=args.job,

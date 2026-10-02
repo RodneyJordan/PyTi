@@ -1,4 +1,5 @@
 from pad.drivers.fake import FakeCompute, FakeStore
+from pad.drivers.sqlite_store import SqliteStore
 from pad.engine import execute
 from pad.jobs import get_job
 from pad.types import RunContext, Status
@@ -67,16 +68,32 @@ def test_store_fail_row():
     assert run["steps"][0]["name"] == "claim_worker"
     assert run["steps"][0]["status"] == "failed"
 
-def test_store_fail_row_for_real_kind_of():
-    store = FakeStore()
-    compute = FakeCompute(fail_run=False, fail_claim = True)
-    ctx = _ctx(compute=compute, store=store)
-    assert execute(get_job("demo"), ctx) is Status.FAILED
-    run = ctx.store.list_runs()[0]
-    assert run["run_id"] == ctx.run_id
-    assert run["job"] == "demo"
-    assert run["status"] == "failed"
-    assert run["finished"] is True
-    assert run["steps"][0]["name"] == "claim_worker"
-    assert run["steps"][0]["status"] == "failed"
-    
+def test_sqlite_start(tmp_path):
+    path = tmp_path / "pad.sqlite"
+    store = SqliteStore(str(path))
+    store.start("r1", "demo", False)
+    row = store.conn.execute(
+        "SELECT run_id, job, dry_run, status, finished FROM runs"
+    ).fetchone()
+    assert row == ("r1", "demo", 0, "", 0)
+
+def test_sqlite_record_step(tmp_path):
+    path = tmp_path / "pad.sqlite"
+    store = SqliteStore(str(path))
+    store.record_step("r1", "jenkins", Status.OK, "testing")
+    row = store.conn.execute(
+        "SELECT run_id, name, status, message, seq FROM steps"
+    ).fetchone()
+    assert row == ("r1", "jenkins", "ok", "testing", 0)
+
+def test_sqlite_finish(tmp_path):
+    path = tmp_path / "pad.sqlite"
+    store = SqliteStore(str(path))
+    store.start("r1", "demo", False)
+    store.record_step("r1", "jenkins", Status.OK, "testing")
+    store.finish("r1", Status.OK)
+    row = store.conn.execute(
+        "SELECT run_id, job, dry_run, status, finished FROM runs WHERE run_id = ?",
+        ("r1",),
+    ).fetchone()
+    assert row == ("r1", "demo", 0, "ok", 1)
