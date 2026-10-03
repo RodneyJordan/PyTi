@@ -82,7 +82,11 @@ class SqliteStore:
             ) 
             
             for step in steps:
-                run["steps"].append(step)
+                run["steps"].append({
+                    "name": step[0],
+                    "status": step[1],
+                    "message": step[2]
+                })
 
             runs.append(run)
         return runs
