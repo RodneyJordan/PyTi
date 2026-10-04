@@ -107,4 +107,12 @@ def test_sqllite_list_runs(tmp_path):
     store.record_step("r1", "jenkins", Status.OK, "testing")
     store.finish("r1", Status.OK)
     runs = store.list_runs()
+    assert runs == [{
+        "run_id": "r1",
+        "job": "demo",
+        "dry_run": False,
+        "status": "ok",
+        "finished": True,
+        "steps": [{"name": "jenkins", "status": "ok", "message": "testing"}],
+    }]
     assert isinstance(runs[0], dict)

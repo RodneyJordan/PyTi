@@ -4,6 +4,7 @@ import argparse
 import uuid
 
 from pad.drivers.fake import FakeCompute, FakeStore
+from pad.drivers.sqlite_store import SqliteStore
 from pad.engine import execute
 from pad.jobs import get_job
 from pad.types import RunContext, Status, StepResult
@@ -24,11 +25,13 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("--fail-run", action="store_true", help="fake driver: fail the command")
     run.add_argument("--fail-name", dest="fail_name", default="")
 
+    runs = sub.add_parser("runs", help="exectue a list of completed runs")
+
     args = parser.parse_args(argv)
 
     if args.cmd == "run":
         compute = FakeCompute(fail_run=args.fail_run, fail_name=args.fail_name)
-        store = SqliteStore()
+        store = SqliteStore("pad.sqlite")
         ctx = RunContext(
             run_id=str(uuid.uuid4())[:8],
             job=args.job,
@@ -40,6 +43,12 @@ def main(argv: list[str] | None = None) -> int:
         status = execute(get_job(args.job), ctx)
         print(f"result {status.value} run={ctx.run_id}")
         return 0 if status is Status.OK else 1
+    elif args.cmd == "runs":
+        store = SqliteStore("pad.sqlite")
+        for run in store.list_runs():
+            last = run["steps"][-1]["name"] if run["steps"] else "-"
+            print(f"{run['run_id']} {run['job']} {run['status']} {last}")
+        return 0
 
     return 2
 

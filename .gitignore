@@ -24,6 +24,8 @@ htmlcov/
 # later persistence
 *.db
 *.sqlite3
+*.sqlite
+
 
 # env / secrets (even if you do not have one yet)
 .env
