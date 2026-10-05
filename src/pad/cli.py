@@ -30,7 +30,10 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if args.cmd == "run":
-        compute = FakeCompute(fail_run=args.fail_run, fail_name=args.fail_name)
+        if args.ssh:
+            compute = SshCompute(hostname=args.ssh, username=args.user)
+        else:
+            compute = FakeCompute(fail_run=args.fail_run, fail_name=args.fail_name)
         store = SqliteStore("pad.sqlite")
         ctx = RunContext(
             run_id=str(uuid.uuid4())[:8],
