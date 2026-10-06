@@ -3,7 +3,7 @@ import paramiko
 
 class SshCompute:
 
-    def __init__(self, hostname: str, usernname: str) -> None:
+    def __init__(self, hostname: str, username: str) -> None:
         self.hostname = hostname
         self.username = username
         self.ssh = paramiko.SSHClient()
@@ -12,12 +12,13 @@ class SshCompute:
 
     def claim(self, worker_id: str | None) -> dict[str, object]:
         self.worker_id = worker_id or self.hostname
-         try :
+        try :
             ssh.connect(
                 hostname=self.hostname, 
                 username=self.username,
-                look_for_keys=True,
-                allow_agent=True,
+                key_filename=str(Path.home() / ".ssh" / "pad_dev"),
+                look_for_keys=False,
+                allow_agent=False,
             )
         except Exception as exc:
             return {"exit_code": 1, "stderr": str(exc), "id": self.worker_id}

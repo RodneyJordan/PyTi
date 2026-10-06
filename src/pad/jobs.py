@@ -6,8 +6,7 @@ from pad.steps import ClaimWorker, ReleaseWorker, RunCommand
 JOBS: dict[str, list[Step]] = {
     "demo": [
         ClaimWorker(),
-        RunCommand(argv=["bazel", "test", "//app:test"]),
-        RunCommand(argv=["jenkins", "test1", "//app:test"]),
+        RunCommand(argv=["cat", "hello.txt"]),
         ReleaseWorker(),
     ]
 }

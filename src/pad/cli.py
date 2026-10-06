@@ -5,6 +5,7 @@ import uuid
 
 from pad.drivers.fake import FakeCompute, FakeStore
 from pad.drivers.sqlite_store import SqliteStore
+from pad.drivers.compute import SshCompute
 from pad.engine import execute
 from pad.jobs import get_job
 from pad.types import RunContext, Status, StepResult
@@ -21,6 +22,8 @@ def main(argv: list[str] | None = None) -> int:
 
     run = sub.add_parser("run", help="execute a named job")
     run.add_argument("job")
+    run.add_argument("--ssh", dest="ssh", default="")
+    run.add_argument("--user", dest="user", default="")
     run.add_argument("--dry-run", action="store_true")
     run.add_argument("--fail-run", action="store_true", help="fake driver: fail the command")
     run.add_argument("--fail-name", dest="fail_name", default="")
