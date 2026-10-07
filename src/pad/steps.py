@@ -56,7 +56,8 @@ class RunCommand:
         result = ctx.compute.run(ctx.get("worker_id"), self.argv)
         if result.get("exit_code") != 0:
             return StepResult(Status.FAILED, result.get("stderr", "nonzero exit"))
-        return StepResult(Status.OK, "command finished", {"exit_code": 0})
+        text = str(result.get("stdout") or "").strip()
+        return StepResult(Status.OK, text or "ok")
 
     def undo(self, ctx: RunContext) -> StepResult:
         return StepResult(Status.SKIPPED, "command has no undo")

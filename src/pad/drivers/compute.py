@@ -1,5 +1,6 @@
 import shlex
 import paramiko
+from pathlib import Path
 
 class SshCompute:
 
@@ -13,7 +14,7 @@ class SshCompute:
     def claim(self, worker_id: str | None) -> dict[str, object]:
         self.worker_id = worker_id or self.hostname
         try :
-            ssh.connect(
+            self.ssh.connect(
                 hostname=self.hostname, 
                 username=self.username,
                 key_filename=str(Path.home() / ".ssh" / "pad_dev"),
@@ -24,12 +25,13 @@ class SshCompute:
             return {"exit_code": 1, "stderr": str(exc), "id": self.worker_id}
         return {"exit_code": 0, "stderr": "", "id": self.worker_id}        
 
-    def run(self,worker_id: str, hostname: str, command: list[str]) -> dict[str, object]:
+    def run(self,worker_id: str, command: list[str]) -> dict[str, object]:
         cmdline = shlex.join(command)
         _stdin, stdout, stderr = self.ssh.exec_command(cmdline)
         exit_code = stdout.channel.recv_exit_status()
+        out = stdout.read().decode()
         err = stderr.read().decode()
-        return {"exit_code": exit_code, "stderr": err}
+        return {"exit_code": exit_code, "stdout": out, "stderr": err}
 
     def release(self, worker_id: str, dirty: bool = False) -> None:
         self.ssh.close()
