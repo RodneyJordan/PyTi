@@ -13,6 +13,7 @@ JOBS: dict[str, list[Step]] = {
     "demo-ssh": [
         ClaimWorker(),
         RunCommand(argv=["./hello_world.sh"]),
+        RunCommand(argv=["cat", "hello-from-pad.txt"]),
         ReleaseWorker(),
     ]
 }
