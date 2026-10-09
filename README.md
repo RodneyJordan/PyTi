@@ -21,19 +21,20 @@ pad run demo
 
 Phase 1: engine + FakeCompute + pytest. No hypervisors yet.
 
+```mermaid
 flowchart TD
-cli["cli.py<br/>pad run job · pad runs"]
-jobs["jobs.py<br/>JOBS name to list of Step"]
-ctx["RunContext<br/>run_id, job, dry_run<br/>outputs, compute, store"]
-exec["engine.execute"]
-plan["step.plan<br/>dry-run, no mutate"]
-apply["step.apply"]
-undo["undo done steps<br/>backwards"]
-fake["FakeCompute"]
-ssh["SshCompute<br/>claim / run / release"]
-mem["FakeStore"]
-sql["SqliteStore<br/>pad.sqlite"]
-runs["pad runs<br/>list_runs"]
+    cli["cli.py<br/>pad run job · pad runs"]
+    jobs["jobs.py<br/>JOBS name to list of Step"]
+    ctx["RunContext<br/>run_id, job, dry_run<br/>outputs, compute, store"]
+    exec["engine.execute"]
+    plan["step.plan<br/>dry-run, no mutate"]
+    apply["step.apply"]
+    undo["undo done steps<br/>backwards"]
+    fake["FakeCompute"]
+    ssh["SshCompute<br/>claim / run / release"]
+    mem["FakeStore"]
+    sql["SqliteStore<br/>pad.sqlite"]
+    runs["pad runs<br/>list_runs"]
 
     cli --> jobs
     cli --> ctx
@@ -50,3 +51,4 @@ runs["pad runs<br/>list_runs"]
     ctx --> sql
     sql --> runs
     mem --> runs
+```
