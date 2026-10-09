@@ -62,6 +62,24 @@ class RunCommand:
     def undo(self, ctx: RunContext) -> StepResult:
         return StepResult(Status.SKIPPED, "command has no undo")
 
+@dataclass
+class RunPlaybook:
+    playbook: str
+
+    def plan(sefl, ctx: RunContext) -> StepResult:
+        if not ctx.get("worker_id"):
+            return StepResult(Status.SKIPPED, "no worker_id")
+        return StepResult(Status.OK, "would call a playbook")
+
+    def apply(self, ctx: RunContext) -> StepResult:
+        if ctx.dry_run:
+            return self.plan(ctx)
+        wid = ctx.get("worker_id")
+        if not wid:
+            return StepResult(Status.SKIPPED, "no worker_id")
+        if ctx.compute is. None:
+            return StepResult(Status.FAILED)
+        result = ctx.compute.run(ctx.get("worker_id"), self.argv)
 
 @dataclass
 class ReleaseWorker:
