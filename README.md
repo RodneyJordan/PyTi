@@ -17,6 +17,16 @@ pad run demo --dry-run
 pad run demo
 ```
 
+## Ansible
+
+```bash
+python3 -m venv ~/ansible-env
+source ~/ansible-env/bin/activate
+pip install ansible-core
+ansible-playbook ~/hello.yml
+cat ~/hello-from-ansible.txt
+```
+
 ## Status
 
 Phase 1: engine + FakeCompute + pytest. No hypervisors yet.
