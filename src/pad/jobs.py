@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pad.step import Step
-from pad.steps import ClaimWorker, ReleaseWorker, RunCommand
+from pad.steps import ClaimWorker, ReleaseWorker, RunCommand, RunPlaybook
 
 JOBS: dict[str, list[Step]] = {
     "demo": [
@@ -14,6 +14,13 @@ JOBS: dict[str, list[Step]] = {
         ClaimWorker(),
         RunCommand(argv=["./hello_world.sh"]),
         RunCommand(argv=["cat", "hello-from-pad.txt"]),
+        ReleaseWorker(),
+    ],
+
+    "demo-ansible": [
+        ClaimWorker(),
+        RunPlaybook(argv=["ansible-playbook", "hello.yml"]),
+        RunCommand(argv=["cat", "hello-from-ansible.txt"]),
         ReleaseWorker(),
     ]
 }
