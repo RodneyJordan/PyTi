@@ -19,7 +19,7 @@ JOBS: dict[str, list[Step]] = {
 
     "demo-ansible": [
         ClaimWorker(),
-        RunPlaybook(argv=["ansible-playbook", "hello.yml"]),
+        RunPlaybook(argv=["/home/rodney/ansible-env/bin/ansible-playbook", "hello.yml"]),
         RunCommand(argv=["cat", "hello-from-ansible.txt"]),
         ReleaseWorker(),
     ]

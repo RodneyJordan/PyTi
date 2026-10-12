@@ -64,6 +64,7 @@ class RunCommand:
 
 @dataclass
 class RunPlaybook:
+    name: str = "run_playbook"
     argv: list[str] = field(default_factory=list)
 
     def plan(sefl, ctx: RunContext) -> StepResult:
@@ -79,9 +80,6 @@ class RunPlaybook:
             return StepResult(Status.SKIPPED, "no worker_id")
         if ctx.compute is None:
             return StepResult(Status.FAILED)
-        prep_ansible_result = ctx.compute.run(ctx.get("worker_id"), ["source ~/ansible-env/bin/activate"])
-        if prep_ansible_result.get("exit_code") != 0:
-            return StepResult(Status.FAILED, prep_ansible_result("stderr", "failed to prep host"))
         result = ctx.compute.run(ctx.get("worker_id"), self.argv)
         if result.get("exit_code") != 0:
             return StepResult(Status.FAILED, result.get("stderr", "Ansible failure..."))
