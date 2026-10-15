@@ -67,7 +67,7 @@ class RunPlaybook:
     name: str = "run_playbook"
     argv: list[str] = field(default_factory=list)
 
-    def plan(sefl, ctx: RunContext) -> StepResult:
+    def plan(self, ctx: RunContext) -> StepResult:
         if not ctx.get("worker_id"):
             return StepResult(Status.SKIPPED, "no worker_id")
         return StepResult(Status.OK, "would call a playbook")
@@ -85,6 +85,26 @@ class RunPlaybook:
             return StepResult(Status.FAILED, result.get("stderr", "Ansible failure..."))
         text = str(result.get("stdout") or "").strip()
         return StepResult(Status.OK, text or "ok")
+
+@dataclass
+class RunJenkinsJob:
+    name: str = "run_jenkins"
+    job: str
+
+    def plan(self, ctx: RunContext) -> StepResult:
+        if not ctx.get("worker_id"):
+            return StepResult(Status.SKIPPED, "no worker_id")
+        return StepResult(Status.OK, "would run a jenkins job")
+
+    def apply(self, ctx: RunContext) -> StepResult:
+        if ctx.dry_run:
+            return self.plan(ctx)
+        wid = ctx.get("worker_id")
+        if not wid:
+            return StepResult(Status.SKIPPED, "no worker_id")
+        if ctx.compute is None:
+            return StepResult(Status.FAILED)
+        result = ctx.compute.run(ctx.get("worker_id", self.job))
 
 @dataclass
 class ReleaseWorker:
