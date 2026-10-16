@@ -105,6 +105,10 @@ class RunJenkinsJob:
         if ctx.compute is None:
             return StepResult(Status.FAILED)
         result = ctx.compute.run(ctx.get("worker_id", self.job))
+        if result.get("exit_code") != 0:
+            return StepResult(Status.FAILED, result.get("stderr", "Jenkins failure..."))
+        text = str(result.get("stdout") or "").strip()
+        return StepResult(Status.OK, text or "ok")
 
 @dataclass
 class ReleaseWorker:
