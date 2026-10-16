@@ -88,8 +88,8 @@ class RunPlaybook:
 
 @dataclass
 class RunJenkinsJob:
-    name: str = "run_jenkins"
     job: str
+    name: str = "run_jenkins"
 
     def plan(self, ctx: RunContext) -> StepResult:
         if not ctx.get("worker_id"):
@@ -104,7 +104,17 @@ class RunJenkinsJob:
             return StepResult(Status.SKIPPED, "no worker_id")
         if ctx.compute is None:
             return StepResult(Status.FAILED)
-        result = ctx.compute.run(ctx.get("worker_id", self.job))
+        token = "11816bead6670f73f3f8cd0a6f15320e71"
+        result = ctx.compute.run(
+            ctx.get("worker_id"), 
+            [
+                "curl",
+                "-fsS",
+                "-X", "POST",
+                f"http://localhost:8080/job/{self.job}/build",
+                "--user", f"rodney:{token}",
+            ],
+        )
         if result.get("exit_code") != 0:
             return StepResult(Status.FAILED, result.get("stderr", "Jenkins failure..."))
         text = str(result.get("stdout") or "").strip()

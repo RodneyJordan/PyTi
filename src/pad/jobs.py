@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pad.step import Step
-from pad.steps import ClaimWorker, ReleaseWorker, RunCommand, RunPlaybook
+from pad.steps import ClaimWorker, ReleaseWorker, RunCommand, RunPlaybook, RunJenkinsJob
 
 JOBS: dict[str, list[Step]] = {
     "demo": [
@@ -26,7 +26,7 @@ JOBS: dict[str, list[Step]] = {
 
     "demo-jenkins": [
         ClaimWorker(),
-        RunJenkins(job="jenkins-demo"),
+        RunJenkinsJob(job="jenkins-demo"),
         RunCommand(argv=["cat", "/opt/jenkins/jenkins-marker.txt"])
 
     ]
