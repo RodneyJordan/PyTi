@@ -88,6 +88,7 @@ class RunPlaybook:
 
 @dataclass
 class RunJenkinsJob:
+
     job: str
     name: str = "run_jenkins"
 
@@ -97,6 +98,12 @@ class RunJenkinsJob:
         return StepResult(Status.OK, "would run a jenkins job")
 
     def apply(self, ctx: RunContext) -> StepResult:
+        import json
+        import time
+
+        base = f"http://localhost:8080/job/{self.job}"
+        auth = ["--user", f"rodney:11816bead6670f73f3f8cd0a6f15320e71"]
+
         if ctx.dry_run:
             return self.plan(ctx)
         wid = ctx.get("worker_id")
@@ -104,21 +111,29 @@ class RunJenkinsJob:
             return StepResult(Status.SKIPPED, "no worker_id")
         if ctx.compute is None:
             return StepResult(Status.FAILED)
-        token = "11816bead6670f73f3f8cd0a6f15320e71"
-        result = ctx.compute.run(
-            ctx.get("worker_id"), 
-            [
-                "curl",
-                "-fsS",
-                "-X", "POST",
-                f"http://localhost:8080/job/{self.job}/build",
-                "--user", f"rodney:{token}",
-            ],
-        )
-        if result.get("exit_code") != 0:
-            return StepResult(Status.FAILED, result.get("stderr", "Jenkins failure..."))
-        text = str(result.get("stdout") or "").strip()
-        return StepResult(Status.OK, text or "ok")
+        # Get last build
+        info = ctx.compute.run(wid, ["curl", "-fsS", f"{base}/api/json", *auth])
+        if info.get("exit_code") != 0:
+            return StepResult(Status.FAILED, info.get("stderr") or "failed to read job")
+        number = json.loads(info["stdout"])["nextBuildNumber"]
+
+        # Trigger build
+        info = ctx.compute.run(wid, ["curl", "-fsS", "-X", "POST", f"{base}/build", *auth])
+        if info.get("exit_code") != 0:
+            return StepResult(Status.FAILED, info.get("stderr") or "failed to launch job")
+        
+        # Poll
+        for _ in range(30):
+            info = ctx.compute.run(wid, ["curl", "-fsS", f"{base}/{number}/api/json", *auth])
+            if info.get("exit_code") == 0:
+                data = json.loads(info.get("stdout") or "{}")
+                result = data.get("result")
+                if result == "SUCCESS":
+                    return StepResult(Status.OK, f"build {number} SUCCESS")
+                if result:
+                    return StepResult(Status.FAILED, f"build {number} {result}")
+            time.sleep(2)
+        return StepResult(Status.FAILED, f"build {number} timed out")
 
 @dataclass
 class ReleaseWorker:
