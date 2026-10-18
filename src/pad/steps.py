@@ -140,7 +140,27 @@ class RunJenkinsJob:
 class RunGit:
     name: str = "run_git"
     repo: str = "http://192.168.86.142:3000/"
-    
+    dest: str = "/opt/scripts"
+    ref: str = "master"
+
+    def plan(self, ctx: RunContext) -> StepResult:
+        if not ctx.get("worker_id"):
+            return StepResult(Status.SKIPPED, "no worker_id")
+        return StepResult(Status.OK, "would run a git command...")
+
+    def apply(self, ctx: RunContext) -> StepResult:
+        dest = self.dest or self.repo.rstrip("/").split("/")[-1].removesuffix(".git")
+        argv = ["git", "clone", "--depth", "1"]
+        if self.ref:
+            argv += ["--branch", self.ref]
+        argv += [self.repo, dest]
+        info = ctx.compute.run(ctx.get("worker_id"), argv)
+        if info.get("exit_code", 1) != 0:
+            return StepResult(Status.FAILED, str(info.get("stderr)") or "git clone failed.."))
+        return StepResult(Status.OK, f"cloned {dest}")
+
+    def undo(self, ctx: RunContext) -> StepResult:
+        return StepResult(Status.SKIPPED, "nothing to undo")
 
 @dataclass
 class ReleaseWorker:

@@ -31,10 +31,13 @@ JOBS: dict[str, list[Step]] = {
         ReleaseWorker(),
     ],
 
-    "remote-git": [
+    "demo-git": [
         ClaimWorker(),
-        RunCommand(),
-        
+        RunGit(repo="http://192.168.86.142:3000/rodney/server-deployment.git"),
+        RunCommand(argv["chmod", "u+x /opt/git/server-deployment/pyti-demo/git_test.sh"]),
+        RunCommand(argv["opt/git/server-deployment/pyti-demo/git_test.sh"])
+        ReleaseWorker(),
+
     ]
 }
 
