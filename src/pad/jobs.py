@@ -27,8 +27,14 @@ JOBS: dict[str, list[Step]] = {
     "demo-jenkins": [
         ClaimWorker(),
         RunJenkinsJob(job="jenkins-demo"),
-        RunCommand(argv=["cat", "/opt/jenkins/jenkins-marker.txt"])
+        RunCommand(argv=["cat", "/opt/jenkins/jenkins-marker.txt"]),
+        ReleaseWorker(),
+    ],
 
+    "remote-git": [
+        ClaimWorker(),
+        RunCommand(),
+        
     ]
 }
 

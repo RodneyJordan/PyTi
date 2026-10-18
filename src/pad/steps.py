@@ -111,6 +111,7 @@ class RunJenkinsJob:
             return StepResult(Status.SKIPPED, "no worker_id")
         if ctx.compute is None:
             return StepResult(Status.FAILED)
+        
         # Get last build
         info = ctx.compute.run(wid, ["curl", "-fsS", f"{base}/api/json", *auth])
         if info.get("exit_code") != 0:
@@ -134,6 +135,12 @@ class RunJenkinsJob:
                     return StepResult(Status.FAILED, f"build {number} {result}")
             time.sleep(2)
         return StepResult(Status.FAILED, f"build {number} timed out")
+
+@dataclass
+class RunGit:
+    name: str = "run_git"
+    repo: str = "http://192.168.86.142:3000/"
+    
 
 @dataclass
 class ReleaseWorker:
