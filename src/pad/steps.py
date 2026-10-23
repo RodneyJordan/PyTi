@@ -156,7 +156,7 @@ class RunGit:
         argv += [self.repo, dest]
         info = ctx.compute.run(ctx.get("worker_id"), argv)
         if info.get("exit_code", 1) != 0:
-            return StepResult(Status.FAILED, str(info.get("stderr)") or "git clone failed.."))
+            return StepResult(Status.FAILED, str(info.get("stdout)") or "git clone failed.."))
         return StepResult(Status.OK, f"cloned {dest}")
 
     def undo(self, ctx: RunContext) -> StepResult:

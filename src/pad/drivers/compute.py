@@ -27,6 +27,7 @@ class SshCompute:
 
     def run(self,worker_id: str, command: list[str]) -> dict[str, object]:
         cmdline = shlex.join(command)
+        print("call to make : " + cmdline)
         _stdin, stdout, stderr = self.ssh.exec_command(cmdline)
         exit_code = stdout.channel.recv_exit_status()
         out = stdout.read().decode()
