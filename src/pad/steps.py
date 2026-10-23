@@ -140,7 +140,7 @@ class RunJenkinsJob:
 class RunGit:
     name: str = "run_git"
     repo: str = "http://192.168.86.142:3000/"
-    dest: str = "/opt/scripts"
+    dest: str = "/opt/git/server-deployment"
     ref: str = "master"
 
     def plan(self, ctx: RunContext) -> StepResult:

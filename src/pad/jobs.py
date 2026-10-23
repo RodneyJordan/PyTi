@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pad.step import Step
-from pad.steps import ClaimWorker, ReleaseWorker, RunCommand, RunPlaybook, RunJenkinsJob
+from pad.steps import ClaimWorker, ReleaseWorker, RunCommand, RunPlaybook, RunJenkinsJob, RunGit
 
 JOBS: dict[str, list[Step]] = {
     "demo": [
@@ -34,8 +34,8 @@ JOBS: dict[str, list[Step]] = {
     "demo-git": [
         ClaimWorker(),
         RunGit(repo="http://192.168.86.142:3000/rodney/server-deployment.git"),
-        RunCommand(argv["chmod", "u+x /opt/git/server-deployment/pyti-demo/git_test.sh"]),
-        RunCommand(argv["opt/git/server-deployment/pyti-demo/git_test.sh"])
+        RunCommand(argv=["chmod", "u+x /opt/git/server-deployment/pyti-demo/git_test.sh"]),
+        RunCommand(argv=["opt/git/server-deployment/pyti-demo/git_test.sh"]),
         ReleaseWorker(),
 
     ]
