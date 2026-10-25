@@ -53,7 +53,10 @@ class RunCommand:
             return self.plan(ctx)
         if ctx.compute is None:
             return StepResult(Status.FAILED, "no compute driver")
-        result = ctx.compute.run(ctx.get("worker_id"), self.argv)
+        filled = self._fill(self.argv, ctx)
+        if isintance(filled, StepResult):
+            return filled
+        result = ctx.compute.run(ctx.get("worker_id"), filled)
         if result.get("exit_code") != 0:
             return StepResult(Status.FAILED, result.get("stderr", "nonzero exit"))
         text = str(result.get("stdout") or "").strip()
@@ -61,6 +64,19 @@ class RunCommand:
 
     def undo(self, ctx: RunContext) -> StepResult:
         return StepResult(Status.SKIPPED, "command has no undo")
+
+    def _fill(self, argv: list[str], ctx: RunContext) -> list[str] | StepResult:
+        out = []
+        for arg in argv:
+            if arg.startswith("{") and arg.endswith("}") and len(arg) > 2:
+                key = arg[1:-1]
+                val = ctx.get(key)
+                if val is None:
+                    return StepResult(Status.FAILED, f"missing output : {key}")
+                out.append(str(val))
+            else:
+                out.append(arg)
+        return out
 
 @dataclass
 class RunPlaybook:
@@ -140,7 +156,7 @@ class RunJenkinsJob:
 class RunGit:
     name: str = "run_git"
     repo: str = "http://192.168.86.142:3000/"
-    dest: str = "/opt/git/server-deployment"
+    dest: str
     ref: str = "master"
 
     def plan(self, ctx: RunContext) -> StepResult:
@@ -157,7 +173,7 @@ class RunGit:
         info = ctx.compute.run(ctx.get("worker_id"), argv)
         if info.get("exit_code", 1) != 0:
             return StepResult(Status.FAILED, str(info.get("stdout)") or "git clone failed.."))
-        return StepResult(Status.OK, f"cloned {dest}")
+        return StepResult(Status.OK, f"cloned {dest}", {"git_dest": dest})
 
     def undo(self, ctx: RunContext) -> StepResult:
         return StepResult(Status.SKIPPED, "nothing to undo")
