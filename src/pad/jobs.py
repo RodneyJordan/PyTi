@@ -33,8 +33,7 @@ JOBS: dict[str, list[Step]] = {
 
     "demo-git": [
         ClaimWorker(),
-        RunGit(repo="http://192.168.86.142:3000/rodney/server-deployment.git",
-               dest="/opt/git/server-deployment"),
+        RunGit(repo="http://192.168.86.142:3000/rodney/server-deployment.git", dest="/opt/git/server-deployment"),
         RunCommand(argv=["chmod", "u+x",  "{git_dest}/pyti-demo/git_test.sh"]),
         RunCommand(argv=["{git_dest}/pyti-demo/git_test.sh"]),
         RunCommand(argv=["cat", "/opt/test-pyti/hello_there.txt"]),
