@@ -54,8 +54,9 @@ class RunCommand:
         if ctx.compute is None:
             return StepResult(Status.FAILED, "no compute driver")
         filled = self._fill(self.argv, ctx)
-        if isintance(filled, StepResult):
+        if isinstance(filled, StepResult):
             return filled
+        
         result = ctx.compute.run(ctx.get("worker_id"), filled)
         if result.get("exit_code") != 0:
             return StepResult(Status.FAILED, result.get("stderr", "nonzero exit"))
@@ -68,15 +69,25 @@ class RunCommand:
     def _fill(self, argv: list[str], ctx: RunContext) -> list[str] | StepResult:
         out = []
         for arg in argv:
-            if arg.startswith("{") and arg.endswith("}") and len(arg) > 2:
-                key = arg[1:-1]
-                val = ctx.get(key)
-                if val is None:
-                    return StepResult(Status.FAILED, f"missing output : {key}")
-                out.append(str(val))
-            else:
-                out.append(arg)
+            filled = self._fill_one(arg, ctx)
+            if isinstance(filled, StepResult):
+                return filled
+            out.append(arg)
         return out
+
+    def _fill_one(self, arg: str, ctx: RunContext) -> str | StepResult:
+        start = arg.find("{")
+        if start == -1:
+            return arg
+        end = arg.find("}", start)
+        if end == -1:
+            return arg
+        key = arg[start +1:end]
+        val = ctx.get(key)
+        if val is None:
+            return StepResult(Status.FAILED, f"missing output: {key}")
+        return arg[:start] + str(val) + arg[end + 1:]
+
 
 @dataclass
 class RunPlaybook:
