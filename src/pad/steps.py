@@ -72,7 +72,7 @@ class RunCommand:
             filled = self._fill_one(arg, ctx)
             if isinstance(filled, StepResult):
                 return filled
-            out.append(arg)
+            out.append(filled)
         return out
 
     def _fill_one(self, arg: str, ctx: RunContext) -> str | StepResult:
@@ -177,14 +177,21 @@ class RunGit:
 
     def apply(self, ctx: RunContext) -> StepResult:
         dest = self.dest or self.repo.rstrip("/").split("/")[-1].removesuffix(".git")
-        argv = ["git", "clone", "--depth", "1"]
-        if self.ref:
-            argv += ["--branch", self.ref]
-        argv += [self.repo, dest]
-        info = ctx.compute.run(ctx.get("worker_id"), argv)
-        if info.get("exit_code", 1) != 0:
-            return StepResult(Status.FAILED, str(info.get("stdout)") or "git clone failed.."))
-        return StepResult(Status.OK, f"cloned {dest}", {"git_dest": dest})
+        check = ctx.compute.run(ctx.get("worker_id"), ["test", "-d", f"{dest}/.git"])
+        if check.get("exit_code" == 0):
+            info = ctx.compute.run(ctx.get("worker_id"), ["git", "-C", dest, "pull", "--ff-only"])
+            if info.get("exit_code", 1) != 0:
+                return StepResult(Status.FAILED, str(info.get("stderr") or "git pull failed..."))
+            return StepResult(Status.OK, f"updated {dest}", {"git_dest": dest})
+        else:
+            argv = ["git", "clone", "--depth", "1"]
+            if self.ref:
+                argv += ["--branch", self.ref]
+            argv += [self.repo, dest]
+            info = ctx.compute.run(ctx.get("worker_id"), argv)
+            if info.get("exit_code", 1) != 0:
+                return StepResult(Status.FAILED, str(info.get("stdout)") or "git clone failed.."))
+            return StepResult(Status.OK, f"cloned {dest}", {"git_dest": dest})
 
     def undo(self, ctx: RunContext) -> StepResult:
         return StepResult(Status.SKIPPED, "nothing to undo")
