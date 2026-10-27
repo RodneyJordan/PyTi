@@ -178,14 +178,16 @@ class RunGit:
     def apply(self, ctx: RunContext) -> StepResult:
         dest = self.dest or self.repo.rstrip("/").split("/")[-1].removesuffix(".git")
         check = ctx.compute.run(ctx.get("worker_id"), ["test", "-d", f"{dest}/.git"])
-        print(f"This is what i'm getting back from check : {check}")
         if check.get("exit_code") == 0:
-            info = ctx.compute.run(ctx.get("worker_id"), ["git", "-C", dest, "pull", "--ff-only"])
+            info = ctx.compute.run(ctx.get("worker_id"), ["git", "-C", dest, "fetch", "origin"])
             if info.get("exit_code", 1) != 0:
-                return StepResult(Status.FAILED, str(info.get("stderr") or "git pull failed..."))
+                return StepResult(Status.FAILED, str(info.get("stderr") or "git fetch failed..."))
+            info = ctx.compute.run(ctx.get("worker_id"), ["git", "-C", dest, "reset", "--hard", "origin/HEAD"])
+            if info.get("exit_code", 1) != 0:
+                return StepResult(Status.FAILED, str(info.get("stderr") or "git reset failed..."))
             return StepResult(Status.OK, f"updated {dest}", {"git_dest": dest})
         else:
-            argv = ["git", "clone", "--depth", "1"]
+            argv = ["git", "clone"]
             if self.ref:
                 argv += ["--branch", self.ref]
             argv += [self.repo, dest]
@@ -195,7 +197,13 @@ class RunGit:
             return StepResult(Status.OK, f"cloned {dest}", {"git_dest": dest})
 
     def undo(self, ctx: RunContext) -> StepResult:
-        return StepResult(Status.SKIPPED, "nothing to undo")
+        dest = ctx.get("git_dest") or self.dest
+        if not dest:
+            return StepResult(Status.SKIPPED, "no dest to remove")
+        info = ctx.compute.run(ctx.get("worker_id"), ["rm", "-rf", dest])
+        if info.get("exit_code", 1) != 0:
+            return StepResult(Status.FAILED, str(info.get("stderr") or "rm failed"))
+        return StepResult(Status.OK, f"removed {dest}")
 
 @dataclass
 class ReleaseWorker:
