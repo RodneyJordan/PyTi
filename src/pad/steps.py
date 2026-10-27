@@ -178,7 +178,8 @@ class RunGit:
     def apply(self, ctx: RunContext) -> StepResult:
         dest = self.dest or self.repo.rstrip("/").split("/")[-1].removesuffix(".git")
         check = ctx.compute.run(ctx.get("worker_id"), ["test", "-d", f"{dest}/.git"])
-        if check.get("exit_code" == 0):
+        print(f"This is what i'm getting back from check : {check}")
+        if check.get("exit_code") == 0:
             info = ctx.compute.run(ctx.get("worker_id"), ["git", "-C", dest, "pull", "--ff-only"])
             if info.get("exit_code", 1) != 0:
                 return StepResult(Status.FAILED, str(info.get("stderr") or "git pull failed..."))
