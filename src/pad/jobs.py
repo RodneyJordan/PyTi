@@ -38,7 +38,13 @@ JOBS: dict[str, list[Step]] = {
         RunCommand(argv=["{git_dest}/pyti-demo/git_test.sh"]),
         RunCommand(argv=["cat", "/opt/test-pyti/hello_there.txt"]),
         ReleaseWorker(),
+    ],
 
+    "test-git-undo": [
+        ClaimWorker(),
+        RunGit(repo="http://192.168.86.142:3000/rodney/server-deployment.git", dest="/opt/git/server-deployment"),
+        RunCommand(argv=["false"]),
+        ReleaseWorker(),
     ]
 }
 

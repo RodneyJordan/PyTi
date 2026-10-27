@@ -82,4 +82,3 @@ class FakeStore:
                 return row
         raise KeyError(run_id)
 
-        
