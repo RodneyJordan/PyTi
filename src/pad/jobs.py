@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pad.step import Step
-from pad.steps import ClaimWorker, ReleaseWorker, RunCommand, RunPlaybook, RunJenkinsJob, RunGit
+from pad.steps import ClaimWorker, ReleaseWorker, RunCommand, RunPlaybook, RunJenkinsJob, RunGit, FetchArtifact
 
 JOBS: dict[str, list[Step]] = {
     "demo": [
@@ -54,6 +54,13 @@ JOBS: dict[str, list[Step]] = {
         RunJenkinsJob(job="jenkins-demo-2"),
         RunPlaybook(argv=["/home/rodney/ansible-env/bin/ansible-playbook", "all-in-one.yml"]),
         RunCommand(argv=["cat", "/opt/test-pyti/all-in-one/all-in-one.txt"]),
+        ReleaseWorker(),
+    ],
+
+    "demo-fetch": [
+        ClaimWorker(),
+        FetchArtifact(url="http://192.168.86.142:3000/rodney/server-deployment/raw/branch/main/README.md", dest="/tmp/pad-artifact.txt"),
+        RunCommand(argv=["cat", "{artifact_path}"]),
         ReleaseWorker(),
     ]
 }

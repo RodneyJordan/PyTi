@@ -208,8 +208,8 @@ class RunGit:
 @dataclass
 class FetchArtifact:
     name: str = "fetch_artifact"
-    dest: str
-    url: str
+    dest: str = ""
+    url: str = ""
 
     def plan(self, ctx: RunContext) -> StepResult:
         if not ctx.get("worker_id"):
