@@ -50,6 +50,7 @@ JOBS: dict[str, list[Step]] = {
     "demo-deploy": [
         ClaimWorker(),
         RunGit(repo="http://192.168.86.142:3000/rodney/server-deployment.git", dest="/opt/git/server-deployment"),
+        RunCommand(argv=["mv", "/opt/git/server-deployment/pyti-demo/all-in-one.sh",  "/opt/staging/"]),
         RunJenkinsJob(job="jenkins-demo-2"),
         RunPlaybook(argv=["/home/rodney/ansible-env/bin/ansible-playbook", "all-in-one.yml"]),
         RunCommand(argv=["cat", "/opt/test-pyti/all-in-one/all-in-one.txt"]),

@@ -129,7 +129,7 @@ class RunJenkinsJob:
         import time
 
         base = f"http://localhost:8080/job/{self.job}"
-        auth = ["--user", f"rodney:11816bead6670f73f3f8cd0a6f15320e71"]
+        auth = ["--user", f"rodney:11840f11ed0926437885c5eb0e9a3a345b"]
 
         if ctx.dry_run:
             return self.plan(ctx)
@@ -204,6 +204,42 @@ class RunGit:
         if info.get("exit_code", 1) != 0:
             return StepResult(Status.FAILED, str(info.get("stderr") or "rm failed"))
         return StepResult(Status.OK, f"removed {dest}")
+
+@dataclass
+class FetchArtifact:
+    name: str = "fetch_artifact"
+    dest: str
+    url: str
+
+    def plan(self, ctx: RunContext) -> StepResult:
+        if not ctx.get("worker_id"):
+            return StepResult(Status.SKIPPED, "no worker_id")
+        return StepResult(Status.OK, f"would fetch {self.url} -> {self.dest}")
+
+    def apply(self, ctx: RunContext) -> StepResult:
+        url = self.url
+        dest = self.dest
+        if ctx.dry_run:
+            return self.plan(ctx)
+        wid = ctx.get("worker_id")
+        if not wid:
+            return StepResult(Status.SKIPPED, "no worker_id")
+        if ctx.compute is None:
+            return StepResult(Status.FAILED, "no computer driver")
+        info = ctx.compute.run(ctx.get("worker_id"), ["curl", "-fsSL", "-o", dest, url])
+        if info.get("exit_code", 1) != 0:
+            return StepResult(Status.FAILED, str(info.get("stderr") or "fetch failed"))
+        return StepResult(Status.OK, f"fetched {dest}", {"artifact_path" : dest})
+
+    def undo(self, ctx: RunContext) -> StepResult:
+        artifact_path = ctx.get("artifact_path") or self.dest
+        if not artifact_path:
+            return StepResult(Status.SKIPPED, "no artifact to remove")
+        info = ctx.compute.run(cxt.get("worker_id"), ["rm", "-f", artifact_path])
+        if info.get("exit_code", 1) != 0:
+            return StepResult(Status.FAILED, str(info.get("stderr") or "rm failed"))
+        return StepResult(Status.OK, f"removed {artifact_path}")
+
 
 @dataclass
 class ReleaseWorker:
