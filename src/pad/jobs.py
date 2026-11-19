@@ -59,7 +59,7 @@ JOBS: dict[str, list[Step]] = {
 
     "demo-fetch": [
         ClaimWorker(),
-        FetchArtifact(url="http://192.168.86.142:3000/rodney/server-deployment/raw/branch/main/README.md", dest="/tmp/pad-artifact.txt"),
+        FetchArtifact(url="http://192.168.86.142:3000/rodney/server-deployment/raw/branch/master/README.md", dest="/tmp/pad-artifact.txt"),
         RunCommand(argv=["cat", "{artifact_path}"]),
         ReleaseWorker(),
     ]
